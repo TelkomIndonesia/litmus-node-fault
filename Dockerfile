@@ -7,3 +7,7 @@ RUN mv ./kubectl /usr/local/bin/
 RUN curl -LO https://github.com/kvaps/kubectl-node-shell/raw/master/kubectl-node_shell
 RUN chmod +x ./kubectl-node_shell
 RUN mv ./kubectl-node_shell /usr/local/bin/kubectl-node_shell
+
+COPY test.sh /app
+WORKDIR /app
+CMD ["/bin/sh","-c","/app/test.sh"]
