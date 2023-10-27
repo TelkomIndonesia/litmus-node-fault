@@ -13,7 +13,9 @@ if [ -z "$NODE_NAMES" ]; then
 fi
 
 for NODE_NAME in $NODE_NAMES; do
-  kubectl config set-context default --cluster kubernetes --user=service-account
+  kubectl config set-cluster kubernetes --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt --server=https://kubernetes.default.svc
+  kubectl config set-credentials sa --token $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+  kubectl config set-context default --cluster kubernetes --user=sa
   kubectl config use-context default
   echo "Running command on node: $NODE_NAME"
   kubectl node_shell $NODE_NAME -- reboot
