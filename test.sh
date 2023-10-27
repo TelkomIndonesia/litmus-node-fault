@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Define the label key and value you want to search for
 LABEL=${NODE_LABEL:-}
