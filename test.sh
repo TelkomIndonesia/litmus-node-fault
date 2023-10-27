@@ -13,7 +13,7 @@ if [ -z "$NODE_NAMES" ]; then
 fi
 
 for NODE_NAME in $NODE_NAMES; do
-  kubectl config get-contexts
+  kubectl config set-context default --cluster kubernetes --user=service-account
   kubectl config use-context default
   echo "Running command on node: $NODE_NAME"
   kubectl node_shell $NODE_NAME -- reboot
