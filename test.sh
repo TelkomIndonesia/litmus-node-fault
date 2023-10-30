@@ -18,5 +18,5 @@ for NODE_NAME in $NODE_NAMES; do
   kubectl config set-context default --cluster kubernetes --user=sa
   kubectl config use-context default
   echo "Running command on node: $NODE_NAME"
-  kubectl node_shell $NODE_NAME -- reboot
+  kubectl node_shell $NODE_NAME -- shutdown -r +3
 done
