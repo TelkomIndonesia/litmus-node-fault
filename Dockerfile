@@ -8,6 +8,5 @@ RUN curl -LO https://github.com/kvaps/kubectl-node-shell/raw/master/kubectl-node
 RUN chmod +x ./kubectl-node_shell
 RUN mv ./kubectl-node_shell /usr/local/bin/kubectl-node_shell
 
-COPY test.sh /app/test.sh
-WORKDIR /app
-CMD ["/bin/sh","-c","/app/test.sh"]
+COPY test.sh /bin/ssh
+CMD ["/bin/sh","-c","/bin/ssh"]
