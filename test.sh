@@ -1,6 +1,9 @@
 #!/bin/sh
 
 # Define the label key and value you want to search for
+printenv
+echo $@
+
 LABEL=${NODE_LABEL:-}
 
 # Use `kubectl` to get the node name by label
