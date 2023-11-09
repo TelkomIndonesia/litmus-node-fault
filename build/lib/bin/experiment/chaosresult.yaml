@@ -1,0 +1,22 @@
+# Jinja template for ChaosResult
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosResult
+metadata:
+    name: "node-restart-chaos"
+    namespace: "litmus"
+    labels: {'name': 'node-restart-chaos', 'chaosUID': ''}
+spec:
+    engine: ""
+    experiment: "node-restart-chaos"
+    instance: ""
+status:
+    experimentStatus: 
+        phase: "Running"
+        verdict: "Awaited"
+        probeSuccessPercentage: "Awaited"
+        failStep: "N/A"
+    history:
+        passedRuns: 2
+        failedRuns: 13
+        stoppedRuns: 0

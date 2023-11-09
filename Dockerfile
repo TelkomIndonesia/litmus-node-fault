@@ -1,12 +1,53 @@
-FROM alpine:latest
+FROM python:3.8.13
 
-RUN apk add curl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-RUN chmod +x kubectl
-RUN mv ./kubectl /usr/local/bin/
-RUN curl -LO https://github.com/kvaps/kubectl-node-shell/raw/master/kubectl-node_shell
-RUN chmod +x ./kubectl-node_shell
-RUN mv ./kubectl-node_shell /usr/local/bin/kubectl-node_shell
+LABEL maintainer="LitmusChaos"
 
-COPY test.sh /bin/ssh
-CMD ["/bin/sh","-c","/bin/ssh"]
+ARG TARGETARCH
+
+# upgrade and setup python
+RUN apt-get update \
+    && apt-get -y install gcc python3-pip python-dev curl \
+    && apt-get install -y libapr1-dev linux-libc-dev \
+    && pip install --upgrade pip \
+    && pip install jinja2 pyYaml
+
+#Installing kops
+ENV kopsversion=v1.20.0
+RUN curl -Lsf -o kops-linux https://github.com/kubernetes/kops/releases/download/${kopsversion}/kops-linux-${TARGETARCH}
+RUN chmod +x ./kops-linux
+RUN mv ./kops-linux /usr/local/bin/kops
+
+#Installing Kubectl
+ENV KUBE_LATEST_VERSION="v1.18.0"
+RUN curl -L https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/${TARGETARCH}/kubectl -o     /usr/local/bin/kubectl && \
+chmod +x /usr/local/bin/kubectl
+
+RUN rm -rf /tmp/* /root/.cache
+
+ENV LC_ALL=C.UTF-8
+
+ENV LANG=C.UTF-8
+
+WORKDIR /litmus
+
+# Copying Necessary Files
+COPY . .
+
+# Setup requirements
+RUN pip3 install -r requirements.txt
+RUN python3 setup.py install
+
+WORKDIR /litmus/byoc
+
+# Setup requirements for byoc
+RUN chmod +x install.sh
+RUN ./install.sh
+
+WORKDIR /litmus
+
+# Copying experiment file
+COPY ./bin/experiment/experiment.py ./experiment
+
+ENV PYTHONPATH /litmus
+
+ENTRYPOINT ["python3"]

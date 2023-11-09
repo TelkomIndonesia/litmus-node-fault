@@ -1,0 +1,51 @@
+---
+name: "node_restart_chaos"
+version: "0.1.0"
+category: "kubernetes"
+repository: "https://github.com/litmuschaos/litmus-python/tree/master/kubernetes/node_restart_chaos"
+community: "https://kubernetes.slack.com/messages/CNXNB0ZTN"
+description: "it execs to kubernetes node and reboot"
+keywords:
+  - "pods"
+  - "kubernetes"
+  - "sample-category"
+  - "exec"
+platforms:
+  - Minikube
+scope: "Namespaced"
+auxiliaryappcheck: false
+permissions:
+  - apigroups:
+      - ""
+      - "batch"
+      - "apps"
+      - "litmuschaos.io"
+    resources:
+      - "jobs"
+      - "pods"
+      - "pods/log"
+      - "events"
+      - "deployments"
+      - "replicasets"
+      - "pods/exec"
+      - "chaosengines"
+      - "chaosexperiments"
+      - "chaosresults"
+    verbs:
+       - "create"
+       - "list"
+       - "get"
+       - "patch"
+       - "update"
+       - "delete"
+       - "deletecollection"
+maturity: "alpha"
+maintainers:
+  - name: "topahadzi"
+    email: "topahadzi@gmail.com"
+provider:
+  name: "ChaosNative"
+minkubernetesversion: "1.12.0"
+references:
+  - name: Documentation
+    url: "https://docs.litmuschaos.io/docs/getstarted/"
