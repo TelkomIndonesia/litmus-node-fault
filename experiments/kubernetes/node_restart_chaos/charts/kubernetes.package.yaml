@@ -1,5 +1,0 @@
-packageName: kubernetes
-experiments:
-  - name: node-restart-chaos
-    CSV: node-restart-chaos.chartserviceversion.yaml
-    desc: "node-restart-chaos"

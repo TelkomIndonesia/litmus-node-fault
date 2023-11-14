@@ -1,10 +1,10 @@
 ---
-name: "node_restart_chaos"
+name: "node-restart"
 version: "0.1.0"
 category: "kubernetes"
-repository: "https://github.com/litmuschaos/litmus-python/tree/master/kubernetes/node_restart_chaos"
+repository: "https://github.com/litmuschaos/litmus-go/tree/master/kubernetes/node-restart"
 community: "https://kubernetes.slack.com/messages/CNXNB0ZTN"
-description: "it execs to kubernetes node and reboot"
+description: "it execs inside target pods to run the chaos inject commands, waits for the chaos duration and reverts the chaos"
 keywords:
   - "pods"
   - "kubernetes"
@@ -42,7 +42,7 @@ permissions:
 maturity: "alpha"
 maintainers:
   - name: "topahadzi"
-    email: "topahadzi@gmail.com"
+    email: "topahdzi@gmail.com"
 provider:
   name: "ChaosNative"
 minkubernetesversion: "1.12.0"

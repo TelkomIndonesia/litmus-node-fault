@@ -1,26 +1,54 @@
 ---
-name: litmus-python-ci
+name: Build
 on:
   pull_request:
-    branches:
-      - master    
-defaults:
-  run:
-    shell: bash
+    branches: [master]
+    types: [opened, synchronize, reopened]
 
 jobs:
-
-  build:
+  pre-checks:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
 
-      - name: Checking syntax of shell script
-        run: bash -c 'shopt -s globstar nullglob; shellcheck **/*.{sh,ksh,bash}' || true
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Installing and configuring dependencies
-        run: make deps
+      #TODO: Add Dockerfile linting
+      # Running go-lint
+      - name: Checking Go-Lint
+        run : |
+          sudo apt-get update && sudo apt-get install golint
+          make gotasks
+
+      - name: gofmt check
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -ne 0 ]
+          then
+           echo "The following files were found to be not go formatted:"
+           gofmt -s -l .
+           exit 1
+          fi
+          
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1   
+
+  build:
+    needs: pre-checks
+    runs-on: ubuntu-latest
+    steps:
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -33,10 +61,16 @@ jobs:
         with:
           version: latest
 
-      - name: Build Image
-        run: make build
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          file: build/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: litmuschaos/go-runner:ci
 
   trivy:
+    needs: pre-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -45,12 +79,12 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker build -f Dockerfile -t docker.io/litmuschaos/py-runner:${{ github.sha }} . --build-arg TARGETARCH=amd64
+          docker build -f build/Dockerfile -t docker.io/litmuschaos/go-runner:${{ github.sha }} . --build-arg TARGETARCH=amd64
       
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/litmuschaos/py-runner:${{ github.sha }}'
+          image-ref: 'docker.io/litmuschaos/go-runner:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true

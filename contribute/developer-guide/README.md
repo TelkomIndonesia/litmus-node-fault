@@ -2,15 +2,15 @@
 
 The artifacts associated with a chaos-experiment are summarized below: 
 
-- Submitted in the litmuschaos/litmus-python repository, under the experiments/*chaos_category*/*experiment_name* folder 
+- Submitted in the litmuschaos/litmus-go repository, under the experiments/*chaos-category*/*experiment-name* folder 
 
-  - Experiment business logic in python. May involve creating new or reusing an existing chaosLib 
+  - Experiment business logic in golang. May involve creating new or reusing an existing chaoslib 
   - Experiment test deployment manifest that is used for verification purposes
   - Experiment RBAC (holds experiment-specific ServiceAccount, Role and RoleBinding)
 
-  Example: [pod delete experiment in litmus-python](/experiments/generic/pod_delete)
+  Example: [pod delete experiment in litmus-go](/experiments/generic/pod-delete)
 
-- Submitted in litmuschaos/chaos-charts repository, under the *chaos_category* folder
+- Submitted in litmuschaos/chaos-charts repository, under the *chaos-category* folder
 
   - Experiment custom resource (CR) (holds experiment-specific chaos parameters & experiment entrypoint)
   - Experiment ChartServiceVersion (holds experiment metadata that will be rendered on [charthub](https://hub.litmuschaos.io/))
@@ -19,17 +19,25 @@ The artifacts associated with a chaos-experiment are summarized below:
 
   Example: [pod delete experiment in chaos-charts](https://github.com/litmuschaos/chaos-charts/tree/master/charts/generic/pod-delete)
 
-The *generate_experiment.py* script is a simple way to bootstrap your experiment, and helps create the aforementioned artifacts in the 
-appropriate directory (i.e., as per the chaos_category) based on an attributes file provided as input by the chart-developer. The 
-scaffolded files consist of placeholders which can then be filled as desired.  
+The *generate_experiment.go* script is a simple way to bootstrap your experiment, and helps create the aforementioned artifacts in the appropriate directory (i.e., as per the chaos-category) based on an attributes file provided as input by the chart-developer. The scaffolded files consist of placeholders which can then be filled as desired.  
+
+### Pre-Requisites
+
+- *go* should be is available & the GOPATH env is configured appropriately
 
 ### Steps to Generate Experiment Manifests
 
-- Clone the litmus-python repository & navigate to the `contribute/developer-guide` folder
+- Clone the litmus-go repository & navigate to the `contribute/developer-guide` folder
 
   ```
-  $ git clone https://github.com/litmuschaos/litmus-python.git
-  $ cd litmus-python/contribute/developer-guide
+  $ git clone https://github.com/litmuschaos/litmus-go.git
+  $ cd litmus-go/contribute/developer-guide
+  ```
+
+- Build litmus-sdk
+
+  ```
+  go build -o ./litmus-sdk ./bin/main.go
   ```
 
 - Populate the `attributes.yaml` with details of the chaos experiment (or chart). Use the [attributes.yaml.sample](/contribute/developer-guide/attributes.yaml.sample) as reference. 
@@ -40,10 +48,10 @@ scaffolded files consist of placeholders which can then be filled as desired.
   $ cat attributes.yaml 
   
   ---
-  name: "sample_exec_chaos"
+  name: "sample-exec-chaos"
   version: "0.1.0"
-  category: "sample_category"
-  repository: "https://github.com/litmuschaos/litmus-python/tree/master/sample_category/sample_exec_chaos"
+  category: "sample-category"
+  repository: "https://github.com/litmuschaos/litmus-go/tree/master/sample-category/sample-exec-chaos"
   community: "https://kubernetes.slack.com/messages/CNXNB0ZTN"
   description: "it execs inside target pods to run the chaos inject commands, waits for the chaos duration and reverts the chaos"
   keywords:
@@ -82,8 +90,8 @@ scaffolded files consist of placeholders which can then be filled as desired.
         - "deletecollection"
   maturity: "alpha"
   maintainers:
-    - name: "oumkale"
-      email: "oumkale@chaosnative.com" 
+    - name: "ispeakc0de"
+      email: "shubham@chaosnative.com" 
   provider:
     name: "ChaosNative"
   minkubernetesversion: "1.12.0"
@@ -93,24 +101,32 @@ scaffolded files consist of placeholders which can then be filled as desired.
 
   ```
 
-- Run the following command to generate the necessary artefacts for submitting the `sample_category` chaos chart with 
-  `sample_exec_chaos` experiment.
+- Run the following command to generate the necessary artifacts for submitting the `sample-category` chaos chart with 
+  `sample-exec-chaos` experiment.
 
   ```
-  $ python3 generate_experiment.py -f=attributes.yaml -g=<generate-type>
+  $ ./litmus-sdk generate <generate-type> -f=attributes.yaml
   ```
 
-  **Note**: Replace the `-g=<generate-type>` placeholder with the appropriate value based on the usecase: 
+  **Note**: Replace the `<generate-type>` placeholder with the appropriate value based on the usecase: 
   - `experiment`: Chaos experiment artifacts belonging to an existing OR new experiment.
+      - Provide the type of chaoslib in the `-t` flag. It supports the following values:
+           - `exec`: It creates the exec based chaoslib(default type)
+           - `helper`: It creates the helper based chaoslib
+           - `aws`: It creates sample experiment for aws platform.
+           - `vmware`: It creates sample experiment for vmware platform.
+           - `azure`: It creates sample experiment for azure platform.
+           - `gcp`: It creates sample experiment for gcp platform.
+          
   - `chart`: Just the chaos-chart metadata, i.e., chartserviceversion.yaml
-      - Provide the type of chart in the `-t=<type>` flag. It supports the following values:
+      - Provide the type of chart in the `-t` flag. It supports the following values:
            - `category`: It creates the chart metadata for the category i.e chartserviceversion, package manifests
            - `experiment`: It creates the chart for the experiment i.e chartserviceversion, engine, rbac, experiment manifests
            - `all`: it creates both category and experiment charts (default type)
 
   - Provide the path of the attribute.yaml manifest in the `-f` flag.
 
-  View the generated files in `/experiments/<chaos_category>` folder.
+  View the generated files in `/experiments/<chaos-category>` folder.
 
   ```
   $ cd /experiments
@@ -118,73 +134,67 @@ scaffolded files consist of placeholders which can then be filled as desired.
   $ ls -ltr
 
   total 8
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 16:44 __init__.py
-  drwxrwxr-x 3 oumkale oumkale 4096 Jul  7 16:44 generic/
-  drwxrwxr-x 3 oumkale oumkale 4096 Jul  7 16:47 sample_category/
+  drwxr-xr-x 3 shubham shubham 4096 June 10 12:02 generic/
+  drwxr-xr-x 3 shubham shubham 4096 June 10 13:26 sample-category/
 
-  $ ls -ltr sample_category/
+
+  $ ls -ltr sample-category/
 
   total 4
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 16:50 __init__.py
-  drwxr-xr-x 5 oumkale oumkale 4096 July 7 16:51 sample_exec_chaos/
-  
-  $ ls -ltr sample_category/sample_exec_chaos/
+  drwxr-xr-x 5 shubham shubham 4096 June 10 13:26 sample-exec-chaos/
+
+  $ ls -ltr sample-category/sample-exec-chaos/
 
   total 12
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 16:47 __init__.py
-  drwxrwxr-x 2 oumkale oumkale 4096 Jul  7 16:48 experiment/
-  drwxrwxr-x 2 oumkale oumkale 4096 Jul  7 16:49 charts/ 
-  drwxrwxr-x 2 oumkale oumkale 4096 Jul  7 16:50 test/ 
-
-  $ ls -ltr sample_category/sample_exec_chaos/experiment
-
-  total 8
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 18:43 __init__.py
-  -rw-rw-r-- 1 oumkale oumkale 6440 Jul  7 18:47 sample_exec_chaos.py
-
-  $ ls -ltr sample_category/charts
-
-  total 24
-  -rw-rw-r-- 1 oumkale oumkale  144 Jul  7 18:48 sample-category.package.yaml
-  -rw-rw-r-- 1 oumkale oumkale  848 Jul  7 18:48 sample-category.chartserviceversion.yaml
-  -rw-rw-r-- 1 oumkale oumkale  989 Jul  7 18:48 sample-exec-chaos.chartserviceversion.yaml
-  -rw-rw-r-- 1 oumkale oumkale 1540 Jul  7 18:48 experiment.yaml
-  -rw-rw-r-- 1 oumkale oumkale 1224 Jul  7 18:48 rbac.yaml
-  -rw-rw-r-- 1 oumkale oumkale  731 Jul  7 18:48 engine.yaml
+  drwxr-xr-x 3 shubham shubham 4096 Jun 10 22:41 charts/
+  drwxr-xr-x 2 shubham shubham 4096 Jun 10 22:41 test/
+  drwxr-xr-x 2 shubham shubham 4096 Jun 10 22:41 experiment/
 
   $ ls -ltr sample-category/sample-exec-chaos/test
 
   total 4
-  -rw-r--r-- 1 oumkale oumkale  1039 July 7 18:52 test.yaml
-  
-  $ ls -ltr chaosLib
-  total 4
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 16:44 __init__.py
-  drwxrwxr-x 4 oumkale oumkale 4096 Jul  7 18:43 litmus
+  -rw-r--r-- 1 shubham shubham  1039 June 10 13:26 test.yaml
 
-  $ ls -ltr chaosLib/litmus
-  total 8
-  drwxrwxr-x 3 oumkale oumkale 4096 Jul  7 16:44 pod_delete
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 16:44 __init__.py
-  drwxrwxr-x 2 oumkale oumkale 4096 Jul  7 18:43 sample_exec_chaos
+  $ ls -ltr sample-category/sample-exec-chaos/experiment
 
-  $ ls -ltr chaosLib/litmus/sample_exec_chaos
-  total 8
-  -rw-rw-r-- 1 oumkale oumkale    0 Jul  7 18:43 __init__.py
-  -rw-rw-r-- 1 oumkale oumkale 5828 Jul  7 18:47 sample_exec_chaos.py
-  
+  total 12 
+  -rw-r--r-- 1 shubham shubham 8893 Jun 10 22:41 sample-exec-chaos.go
+
+  $ ls -ltr sample-category/sample-exec-chaos/charts
+
+  total 28
+  -rw-r--r-- 1 shubham shubham  152 Jun 10 22:41 sample-category.package.yaml
+  -rw-r--r-- 1 shubham shubham  869 Jun 10 22:41 sample-category.chartserviceversion.yaml
+  -rw-r--r-- 1 shubham shubham  999 Jun 10 22:41 sample-exec-chaos.chartserviceversion.yaml
+  -rw-r--r-- 1 shubham shubham 1534 Jun 10 22:41 experiment.yaml
+  -rw-r--r-- 1 shubham shubham 1209 Jun 10 22:41 rbac.yaml
+  -rw-r--r-- 1 shubham shubham  735 Jun 10 22:41 engine.yaml
+  drwxr-xr-x 2 shubham shubham 4096 Jun 10 22:41 icons/
   ```
  
-- Proceed with construction of business logic inside the `sample_exec_chaos.py` file, by making
-  the appropriate modifications listed below to achieve the desired effect: 
 
-  - variables 
-  - entry & exit criteria checks for the experiment 
-  - helper utils in either [pkg](/pkg/) or new [base chaos libraries](/chaosLib) 
+- Proceed with construction of business logic, by making the appropriate modifications listed below
+  to achieve the desired effect: 
 
-- The chaosLib is created at `chaosLib/litmus/sample_exec_chaos/lib/sample_exec_chaos.py` path. It contains some pre-defined steps which runs the `ChaosInject` command (explicitly provided as an ENV var in the experiment CR). Which will induce chaos in the target application. It will wait for the given chaos duration and finally runs the `ChaosKill` command (also provided as an ENV var) for cleanup purposes. Update this chaosLib to achieve the desired effect based on the use-case or reuse the other existing chaosLib.
+  - Pre-Chaos Checks: Additional experiment-specific checks to run before chaos. Checks should be
+    added at the `@TODO: user PRE-CHAOS-CHECK` marker in the
+    `experiments/<category>/<name>/experiment/<name>.go` file
 
-- Create an experiment README explaining, briefly, the *what*, *why* & *how* of the experiment to aid users of this experiment. 
+  - Inject Chaos: The heart of your experiment, actually enact the choas. By default, the generated
+    code will call out to the generated library. However, if your experiment simply makes use of
+    exising libraries, modify the chaos injection at the `@TODO: user INVOKE-CHAOSLIB` marker in the
+    `experiments/<category>/<name>/experiment/<name>.go` file
+
+    - Library Modifications: This is where the low level chaos execution code should live. Populate
+      the `runChaos`, `experimentExecution`, and `injectChaos` functions as appropriate in the 
+      `chaosLib/litmus/<name>/lib/<name>.go` file.
+
+  - Post-Chaos Checks: Additional experiment-specific checks to run after achos. Checks should be
+    added at the `@TODO: user POST-CHAOS-CHECK` marker in the 
+    `experiments/<category>/<name>/experiment/<name>.go` file
+
+- Create an experiment README explaining, briefly, the *what*, *why* & *how* of the experiment to aid users of this experiment. This README
+  should live at `experiments/<category>/<name>/README.md`
 
 ### Steps to Test Experiment 
 
@@ -216,31 +226,13 @@ Follow the steps provided below to setup okteto & test the experiment execution.
   kubectl apply -f test/test.yml
   ```
 
-- Go to the root of this repository (litmuschaos/litmus-python) & launch the Okteto development environment in your workspace.
-  This should take you to the bash prompt on the dev container into which the content of the litmus-python repo is loaded. 
-  
-  - Note : 
-    -  Add packages routes for all the files which are generated from sdk in `setup.py` before creating image. 
-      example :
-      ```
-      'chaosLib/litmus/sample_exec_chaos',
-      'chaosLib/litmus/sample_exec_chaos/lib',
-      'pkg/sample_category',
-      'pkg/sample_category/environment',
-      'pkg/sample_category/types',
-      'experiments/sample_category',
-      'experiments/sample_category/sample_exec_chaos',
-      'experiments/sample_category/sample_exec_chaos/experiment',
-      ```
-    - Add `&` operator at the end of chaos commands `CHAOS_INJECT_COMMAND` example: `md5sum /dev/zero &`. 
-      As we are running chaos commands as a background process in a separate thread.  
-    - Import main file it in bin/experiment/experiment.py and add case. example: line number 3 in experiment.py 
-    - Then go to root(litmus-python) and run `python3 setup.py install`
+- Go to the root of this repository (litmuschaos/litmus-go) & launch the Okteto development environment in your workspace.
+  This should take you to the bash prompt on the dev container into which the content of the litmus-go repo is loaded. 
 
   ```
-  root@test:~/okteto/litmus-python# okteto up 
+  root@test:~/okteto/litmus-go# okteto up 
 
-  Deployment litmus-python doesn't exist in namespace litmus. Do you want to create a new one? [y/n]: y
+  Deployment litmus-go doesn't exist in namespace litmus. Do you want to create a new one? [y/n]: y
   ✓  Development container activated
   ✓  Files synchronized
 
@@ -258,15 +250,10 @@ Follow the steps provided below to setup okteto & test the experiment execution.
   This dev container inherits the env, serviceaccount & other properties specified on the test deployment & is now suitable for 
   running the experiment.
 
-- Install dependencies 
-    - Run `curl -L https://storage.googleapis.com/kubernetes-release/release/"v1.18.0"/bin/linux/"amd64"/kubectl -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl`
-    - Run `pip3 install -r requirements.txt`
-    - Run `python3 setup.py install`, run this command for every change in experiment code.
-
 - Execute the experiment against the sample app chosen & verify the steps via logs printed on the console.
 
   ```
-  python3 bin/experiment/experiment.py -name=<experiment-name>
+  go run bin/go-runner.go -name <experiment-name>
   ``` 
 
 - In parallel, observe the experiment execution via the changes to the pod/node state
@@ -280,19 +267,16 @@ Follow the steps provided below to setup okteto & test the experiment execution.
 
 - Once the experiment code is validated, stop/remove the development environment 
 
+
   ```
-  root@test:~/okteto/litmus-python# okteto down
+  root@test:~/okteto/litmus-go# okteto down
   ✓  Development container deactivated
   i  Run 'okteto push' to deploy your code changes to the cluster
   ```
 
 - (Optional) Once the experiment has been validated using the above step, it can also be tested against the standard Litmus chaos 
   flow. This involves: 
-  The experiment created using the above steps, can be tested in the following manner: 
 
-- Run the `experiment.yml` with the desired values in the ENV and appropriate `chaosServiceAccount` 
-  using a custom dev image instead of `litmuschaos/litmus-python` (say, oumkale/litmus-python) that packages the 
-  business logic.
   - Creating a custom image built with the code validated by the previous steps
   - Launching the Chaos-Operator
   - Modifying the ChaosExperiment manifest (experiment.yaml) with right defaults (env & other attributes, as applicable) & creating 
@@ -304,7 +288,7 @@ Follow the steps provided below to setup okteto & test the experiment execution.
 
 ### Steps to Include the Chaos Charts/Experiments into the ChartHub
 
-- Send a PR to the [litmus-python](https://github.com/litmuschaos/litmus-python) repo with the modified experiment files, rbac, 
+- Send a PR to the [litmus-go](https://github.com/litmuschaos/litmus-go) repo with the modified experiment files, rbac, 
   test deployment & README.
 - Send a PR to the [chaos-charts](https://github.com/litmuschaos/chaos-charts) repo with the modified experiment CR, 
   experiment chartserviceversion, rbac, (category-level) chaos chart chartserviceversion & package.yaml (if applicable). 

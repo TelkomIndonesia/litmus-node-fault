@@ -1,6 +1,4 @@
-**/.idea
-**/*.egg-info
-**/.DS_Store
-**/*intuit*/**
-**/*intuit.md
-**/*intuit*
+build/_output
+.stignore
+.idea/
+.vscode/

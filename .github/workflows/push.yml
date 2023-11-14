@@ -1,23 +1,51 @@
 ---
-name: litmus-python-ci
-on:  
+name: Push
+on:
   push:
     branches:
       - master
     tags-ignore:
       - '**'
-defaults:
-  run:
-    shell: bash
-
 jobs:
-
-  push:
+  pre-checks:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2      
-      
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v2
+
+      #TODO: Add Dockerfile linting
+      # Running go-lint
+      - name: Checking Go-Lint
+        run : |
+          sudo apt-get update && sudo apt-get install golint
+          make gotasks
+
+      - name: gofmt check
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -ne 0 ]
+          then
+           echo "The following files were found to be not go formatted:"
+           gofmt -s -l .
+           exit 1
+          fi
+          
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1       
+
+  push:
+    needs: pre-checks
+    runs-on: ubuntu-latest
+    steps:
+
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v2
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -39,6 +67,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: Dockerfile
+          file: build/Dockerfile
           platforms: linux/amd64,linux/arm64
-          tags: litmuschaos/py-runner:ci
+          tags: litmuschaos/go-runner:ci

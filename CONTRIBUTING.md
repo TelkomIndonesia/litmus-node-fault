@@ -1,4 +1,4 @@
-# Contributing to Litmus-Python
+# Contributing to Litmus-Go
 
 Litmus is an Apache 2.0 Licensed project and uses the standard GitHub pull requests process to review and accept contributions.
 
@@ -16,6 +16,7 @@ There are several areas of Litmus that could use your help. For starters, you co
 -   Fork the repository on GitHub.
 -   Create a branch from where you want to base your work (usually master).
 -   Make your changes.
+-   Relevant coding style guidelines are the [Go Code Review Comments](https://code.google.com/p/go-wiki/wiki/CodeReviewComments) and the _Formatting and style_ section of Peter Bourgon's [Go: Best Practices for Production Environments](http://peter.bourgon.org/go-in-production/#formatting-and-style).
 -   Commit your changes by making sure the commit messages convey the need and notes about the commit.
 -   Push your changes to the branch in your fork of the repository.
 -   Submit a pull request to the original repository. See [Pull Request checklist](#pull-request-checklist)
@@ -47,9 +48,9 @@ You can also use git [aliases](https://git-scm.com/book/tr/v2/Git-Basics-Git-Ali
 
 ## Setting up your Development Environment
 
-This project is implemented using Python and uses the standard python tools for development and build. In addition, this project heavily relies on Docker and Kubernetes. It is expected that the contributors.
+This project is implemented using Go and uses the standard golang tools for development and build. In addition, this project heavily relies on Docker and Kubernetes. It is expected that the contributors.
     
--   are familiar with working with Python
+-   are familiar with working with Go
 -   are familiar with Docker containers
 -   are familiar with Kubernetes and have access to a Kubernetes cluster or Minikube to test the changes.
 
