@@ -117,7 +117,10 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		os.Exit(0)
 	default:
 		log.Infof("[Inject]: Restarting the %v node", experimentsDetails.TargetNode)
-
+		exec.Command("kubectl", "config", "set-cluster", "kubernetes", "--certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "--server=https://kubernetes.default.svc")
+		exec.Command("kubectl", "config", "set-credentials", "sa", "--token", "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
+		exec.Command("kubectl", "config", "set-context", "default", "--cluster", "kubernetes", "--user=sa")
+		exec.Command("kubectl", "config", "use-context", "default")
 		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "+3")
 		if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 			return err
