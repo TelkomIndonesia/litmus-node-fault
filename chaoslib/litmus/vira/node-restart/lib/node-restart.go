@@ -3,15 +3,14 @@ package lib
 import (
 	"context"
 	"fmt"
-	"github.com/litmuschaos/litmus-go/pkg/cerrors"
-	"github.com/palantir/stacktrace"
 	"os"
 	"os/exec"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
+
+	"github.com/litmuschaos/litmus-go/pkg/cerrors"
+	"github.com/palantir/stacktrace"
 
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
@@ -22,7 +21,6 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
 	"github.com/litmuschaos/litmus-go/pkg/utils/retry"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,7 +29,7 @@ var (
 	inject, abort chan os.Signal
 )
 
-//PrepareNodeRestart contains the preparation steps before chaos injection
+// PrepareNodeRestart contains the preparation steps before chaos injection
 func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
 	// inject channel is used to transmit signal notifications.
@@ -92,9 +90,6 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 		log.Info("[Status]: Verify that the Auxiliary Applications are running")
 		if err = status.CheckAuxiliaryApplicationStatus(experimentsDetails.AuxiliaryAppInfo, experimentsDetails.Timeout, experimentsDetails.Delay, clients); err != nil {
 			log.Info("[Revert]: Reverting chaos because auxiliary application status check failed")
-			if uncordonErr := uncordonNode(experimentsDetails, clients, chaosDetails); uncordonErr != nil {
-				return cerrors.PreserveError{ErrString: fmt.Sprintf("[%s,%s]", stacktrace.RootCause(err).Error(), stacktrace.RootCause(uncordonErr).Error())}
-			}
 			return err
 		}
 	}
@@ -104,7 +99,6 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 	common.WaitForDuration(experimentsDetails.ChaosDuration)
 
 	log.Info("[Chaos]: Stopping the experiment")
-
 
 	//Waiting for the ramp time after chaos injection
 	if experimentsDetails.RampTime != 0 {
@@ -124,7 +118,7 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 	default:
 		log.Infof("[Inject]: Restarting the %v node", experimentsDetails.TargetNode)
 
-		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "now")
+		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "+3")
 		if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 			return err
 		}
@@ -158,9 +152,6 @@ func abortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, clients
 	// retry thrice for the chaos revert
 	retry := 3
 	for retry > 0 {
-		if err := uncordonNode(experimentsDetails, clients, chaosDetails); err != nil {
-			log.Errorf("Unable to uncordon the node, err: %v", err)
-		}
 		retry--
 		time.Sleep(1 * time.Second)
 	}

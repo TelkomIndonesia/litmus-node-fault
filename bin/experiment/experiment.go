@@ -29,8 +29,8 @@ import (
 	nodeDrain "github.com/litmuschaos/litmus-go/experiments/generic/node-drain/experiment"
 	nodeIOStress "github.com/litmuschaos/litmus-go/experiments/generic/node-io-stress/experiment"
 	nodeMemoryHog "github.com/litmuschaos/litmus-go/experiments/generic/node-memory-hog/experiment"
-	nodeRestart "github.com/litmuschaos/litmus-go/experiments/generic/node-restart/experiment"
-	viraNodeRestart "github.com/litmuschaos/litmus-go/experiments/kubernetes/node-restart/experiment"
+
+	// nodeRestart "github.com/litmuschaos/litmus-go/experiments/generic/node-restart/experiment"
 	nodeTaint "github.com/litmuschaos/litmus-go/experiments/generic/node-taint/experiment"
 	podAutoscaler "github.com/litmuschaos/litmus-go/experiments/generic/pod-autoscaler/experiment"
 	podCPUHogExec "github.com/litmuschaos/litmus-go/experiments/generic/pod-cpu-hog-exec/experiment"
@@ -57,6 +57,7 @@ import (
 	ebsLossByTag "github.com/litmuschaos/litmus-go/experiments/kube-aws/ebs-loss-by-tag/experiment"
 	ec2TerminateByID "github.com/litmuschaos/litmus-go/experiments/kube-aws/ec2-terminate-by-id/experiment"
 	ec2TerminateByTag "github.com/litmuschaos/litmus-go/experiments/kube-aws/ec2-terminate-by-tag/experiment"
+	viraNodeRestart "github.com/litmuschaos/litmus-go/experiments/kubernetes/node-restart/experiment"
 	springBootFaults "github.com/litmuschaos/litmus-go/experiments/spring-boot/spring-boot-faults/experiment"
 	vmpoweroff "github.com/litmuschaos/litmus-go/experiments/vmware/vm-poweroff/experiment"
 
@@ -149,8 +150,8 @@ func main() {
 		ebsLossByID.EBSLossByID(clients)
 	case "ebs-loss-by-tag":
 		ebsLossByTag.EBSLossByTag(clients)
-	case "node-restart":
-		nodeRestart.NodeRestart(clients)
+	// case "node-restart":
+	// 	nodeRestart.NodeRestart(clients)
 	case "vira-node-restart":
 		viraNodeRestart.NodeRestart(clients)
 	case "pod-dns-error":

@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/litmuschaos/chaos-operator/api/litmuschaos/v1alpha1"
-	litmusLIB "github.com/litmuschaos/litmus-go/chaoslib/litmus/kubernete/node-restart/lib"
+	litmusLIB "github.com/litmuschaos/litmus-go/chaoslib/litmus/vira/node-restart/lib"
 	"github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	experimentEnv "github.com/litmuschaos/litmus-go/pkg/kubernetes/node-restart/environment"

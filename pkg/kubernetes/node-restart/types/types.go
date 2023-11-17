@@ -4,31 +4,24 @@ import (
 	clientTypes "k8s.io/apimachinery/pkg/types"
 )
 
-// ADD THE ATTRIBUTES OF YOUR CHOICE HERE
-// FEW MANDATORY ATTRIBUTES ARE ADDED BY DEFAULT
-
 // ExperimentDetails is for collecting all the experiment-related details
 type ExperimentDetails struct {
-	ExperimentName      string
-	EngineName          string
-	ChaosDuration       int
-	ChaosInterval       int
-	RampTime            int
-	AppNS               string
-	AppLabel            string
-	AppKind             string
-	AuxiliaryAppInfo    string
-	ChaosUID            clientTypes.UID
-	InstanceID          string
-	ChaosNamespace      string
-	ChaosPodName        string
-	Timeout             int
-	Delay               int
-	TargetContainer     string
-	ChaosInjectCmd      string
-	ChaosKillCmd        string
-	PodsAffectedPerc    int
-	TargetPods          string
+	ExperimentName     string
+	EngineName         string
+	ChaosDuration      int
+	RampTime           int
+	AppNS              string
+	AppLabel           string
+	AppKind            string
+	ChaosUID           clientTypes.UID
+	InstanceID         string
+	ChaosNamespace     string
+	ChaosPodName       string
+	TargetNode         string
+	AuxiliaryAppInfo   string
+	Timeout            int
+	Delay              int
 	LIBImagePullPolicy string
-	IsTargetContainerProvided bool
+	TargetContainer    string
+	NodeLabel          string
 }

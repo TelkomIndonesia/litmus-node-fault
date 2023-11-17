@@ -38,3 +38,9 @@ COPY --from=dep /sbin/iptables /sbin/
 
 #Copying Necessary Files
 COPY ./pkg/cloud/aws/common/ssm-docs/LitmusChaos-AWS-SSM-Docs.yml .
+
+USER root
+RUN curl -LO https://github.com/kvaps/kubectl-node-shell/raw/master/kubectl-node_shell
+RUN chmod +x ./kubectl-node_shell
+RUN mv ./kubectl-node_shell /usr/local/bin/kubectl-node_shell
+USER litmus
