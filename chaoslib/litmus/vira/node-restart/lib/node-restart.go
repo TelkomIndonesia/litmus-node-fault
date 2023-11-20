@@ -117,10 +117,29 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		os.Exit(0)
 	default:
 		log.Infof("[Inject]: Restarting the %v node", experimentsDetails.TargetNode)
-		exec.Command("kubectl", "config", "set-cluster", "kubernetes", "--certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "--server=https://kubernetes.default.svc")
-		exec.Command("kubectl", "config", "set-credentials", "sa", "--token", "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
-		exec.Command("kubectl", "config", "set-context", "default", "--cluster", "kubernetes", "--user=sa")
-		exec.Command("kubectl", "config", "use-context", "default")
+		setClusterCmd := exec.Command("kubectl", "config", "set-cluster", "kubernetes", "--certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "--server=https://kubernetes.default.svc")
+		if err := common.RunCLICommands(setClusterCmd, "", "", "failed to set cluster configuration", cerrors.ErrorTypeHelper); err != nil {
+			return err
+		}
+
+		// Set credentials
+		setCredentialsCmd := exec.Command("kubectl", "config", "set-credentials", "sa", "--token", "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
+		if err := common.RunCLICommands(setCredentialsCmd, "", "", "failed to set credentials", cerrors.ErrorTypeHelper); err != nil {
+			return err
+		}
+
+		// Set context
+		setContextCmd := exec.Command("kubectl", "config", "set-context", "default", "--cluster", "kubernetes", "--user=sa")
+		if err := common.RunCLICommands(setContextCmd, "", "", "failed to set context", cerrors.ErrorTypeHelper); err != nil {
+			return err
+		}
+
+		// Use context
+		useContextCmd := exec.Command("kubectl", "config", "use-context", "default")
+		if err := common.RunCLICommands(useContextCmd, "", "", "failed to use context", cerrors.ErrorTypeHelper); err != nil {
+			return err
+		}
+
 		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "+3")
 		if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 			return err
