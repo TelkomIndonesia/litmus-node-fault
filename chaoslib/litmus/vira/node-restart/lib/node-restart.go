@@ -145,26 +145,13 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 			return err
 		}
 
-		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "now")
+		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "+1")
 		if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 			return err
 		}
 
 		common.SetTargets(experimentsDetails.TargetNode, "injected", "node", chaosDetails)
 
-		return retry.
-			Times(uint(experimentsDetails.Timeout / experimentsDetails.Delay)).
-			Wait(time.Duration(experimentsDetails.Delay) * time.Second).
-			Try(func(attempt uint) error {
-				nodeSpec, err := clients.KubeClient.CoreV1().Nodes().Get(context.Background(), experimentsDetails.TargetNode, v1.GetOptions{})
-				if err != nil {
-					return cerrors.Error{ErrorCode: cerrors.ErrorTypeChaosInject, Target: fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), Reason: err.Error()}
-				}
-				if !nodeSpec.Spec.Unschedulable {
-					return cerrors.Error{ErrorCode: cerrors.ErrorTypeChaosInject, Target: fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), Reason: "node is not in unschedule state"}
-				}
-				return nil
-			})
 	}
 	return nil
 }
