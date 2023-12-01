@@ -117,7 +117,7 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		// stopping the chaos execution, if abort signal received
 		os.Exit(0)
 	default:
-		targetNodeList, err := common.GetTargetPods(experimentsDetails.NodeLabel, clients)
+		targetNodeList, err := common.getNodesByLabels(experimentsDetails.NodeLabel, clients)
 		if err != nil {
 			return err
 		}
