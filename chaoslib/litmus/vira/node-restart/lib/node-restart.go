@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,9 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"strconv"
 
 	"github.com/litmuschaos/litmus-go/pkg/cerrors"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
@@ -21,8 +22,6 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/status"
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
-	"github.com/litmuschaos/litmus-go/pkg/utils/retry"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -49,13 +48,16 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 		common.WaitForDuration(experimentsDetails.RampTime)
 	}
 
-	if experimentsDetails.TargetNode == "" {
-		//Select node for kubelet-service-kill
-		experimentsDetails.TargetNode, err = common.getNodesByLabels(experimentsDetaiAppNS, ls.experimentsDetails.AppLabel, experimentsDetails.NodeLabel, clients)
-		if err != nil {
-			return stacktrace.Propagate(err, "could not get node name")
-		}
+	nodesAffectedPerc, _ := strconv.Atoi(experimentsDetails.NodesAffectedPerc)
+	targetNodeList, err := common.GetNodeList(experimentsDetails.TargetNode, experimentsDetails.NodeLabel, nodesAffectedPerc, clients)
+	if err != nil {
+		return stacktrace.Propagate(err, "could not get node list")
 	}
+
+	log.InfoWithValues("[Info]: Details of Nodes under chaos injection", logrus.Fields{
+		"No. Of Nodes": len(targetNodeList),
+		"Node Names":   targetNodeList,
+	})
 
 	if experimentsDetails.EngineName != "" {
 		msg := "Injecting " + experimentsDetails.ExperimentName + " chaos on " + experimentsDetails.TargetNode + " node"
@@ -74,7 +76,7 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 	go abortWatcher(experimentsDetails, clients, resultDetails, chaosDetails, eventsDetails)
 
 	// Restart the application node
-	if err := restartNode(experimentsDetails, clients, chaosDetails); err != nil {
+	if err := restartNode(targetNodeList, experimentsDetails, clients, chaosDetails); err != nil {
 		log.Info("[Revert]: Reverting chaos because error during restart of node")
 		return stacktrace.Propagate(err, "could not restart node")
 	}
@@ -110,18 +112,13 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 }
 
 // restartNode restart the target node
-func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, chaosDetails *types.ChaosDetails) error {
+func restartNode(targetNodeList []string, experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, chaosDetails *types.ChaosDetails) error {
 
 	select {
 	case <-inject:
 		// stopping the chaos execution, if abort signal received
 		os.Exit(0)
 	default:
-		targetNodeList, err := common.getNodesByLabels(experimentsDetails.NodeLabel, clients)
-		if err != nil {
-			return err
-		}
-
 		token, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 		if err != nil {
 			return err
@@ -148,14 +145,14 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		if err := common.RunCLICommands(useContextCmd, "", "", "failed to use context", cerrors.ErrorTypeHelper); err != nil {
 			return err
 		}
-		for _, node := range targetNodeList.Items {
-			log.Infof("[Inject]: Restarting the %v node", node.Name)
-			command := exec.Command("kubectl", "node_shell", node.Name, "--", "shutdown", "-r", "+1")
-			if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", node.Name), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
+		for _, appNode := range targetNodeList {
+			log.Infof("[Inject]: Restarting the %v node", appNode)
+			command := exec.Command("kubectl", "node_shell", appNode, "--", "shutdown", "-r", "+1")
+			if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", appNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 				return err
 			}
 	
-			common.SetTargets(node.Name, "injected", "node", chaosDetails)
+			common.SetTargets(appNode, "injected", "node", chaosDetails)
 	
 		}
 

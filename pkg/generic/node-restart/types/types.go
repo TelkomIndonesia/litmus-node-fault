@@ -17,6 +17,7 @@ type ExperimentDetails struct {
 	TerminationGracePeriodSeconds int
 	InstanceID                    string
 	ChaosNamespace                string
+	NodesAffectedPerc             string
 	ChaosPodName                  string
 	RunID                         string
 	LIBImage                      string
