@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,6 +21,8 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/status"
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
+	"github.com/litmuschaos/litmus-go/pkg/utils/retry"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -48,7 +51,7 @@ func PrepareNodeRestart(experimentsDetails *experimentTypes.ExperimentDetails, c
 
 	if experimentsDetails.TargetNode == "" {
 		//Select node for kubelet-service-kill
-		experimentsDetails.TargetNode, err = common.GetNodeName(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.NodeLabel, clients)
+		experimentsDetails.TargetNode, err = common.getNodesByLabels(experimentsDetaiAppNS, ls.experimentsDetails.AppLabel, experimentsDetails.NodeLabel, clients)
 		if err != nil {
 			return stacktrace.Propagate(err, "could not get node name")
 		}
@@ -114,7 +117,11 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		// stopping the chaos execution, if abort signal received
 		os.Exit(0)
 	default:
-		log.Infof("[Inject]: Restarting the %v node", experimentsDetails.TargetNode)
+		targetNodeList, err := common.GetTargetPods(experimentsDetails.NodeLabel, clients)
+		if err != nil {
+			return err
+		}
+
 		token, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 		if err != nil {
 			return err
@@ -141,13 +148,17 @@ func restartNode(experimentsDetails *experimentTypes.ExperimentDetails, clients 
 		if err := common.RunCLICommands(useContextCmd, "", "", "failed to use context", cerrors.ErrorTypeHelper); err != nil {
 			return err
 		}
-
-		command := exec.Command("kubectl", "node_shell", experimentsDetails.TargetNode, "--", "shutdown", "-r", "+3")
-		if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", experimentsDetails.TargetNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
-			return err
+		for _, node := range targetNodeList.Items {
+			log.Infof("[Inject]: Restarting the %v node", node.Name)
+			command := exec.Command("kubectl", "node_shell", node.Name, "--", "shutdown", "-r", "+1")
+			if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", node.Name), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
+				return err
+			}
+	
+			common.SetTargets(node.Name, "injected", "node", chaosDetails)
+	
 		}
 
-		common.SetTargets(experimentsDetails.TargetNode, "injected", "node", chaosDetails)
 
 	}
 	return nil
