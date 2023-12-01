@@ -152,10 +152,11 @@ func restartNode(targetNodeList []string, experimentsDetails *experimentTypes.Ex
 				return err
 			}
 	
-			common.SetTargets(appNode, "injected", "node", chaosDetails)
-	
 		}
 
+		for _, appNode := range targetNodeList {
+			common.SetTargets(appNode, "injected", "node", chaosDetails)
+		}
 
 	}
 	return nil
