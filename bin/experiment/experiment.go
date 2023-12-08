@@ -11,7 +11,6 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
-
 	// nodeRestart "github.com/litmuschaos/litmus-go/experiments/generic/node-restart/experiment"
 	viraNodeRestart "github.com/litmuschaos/litmus-go/experiments/kubernetes/node-restart/experiment"
 
@@ -34,7 +33,7 @@ func main() {
 	clients := clients.ClientSets{}
 
 	// parse the experiment name
-	experimentName := flag.String("name", "pod-delete", "name of the chaos experiment")
+	experimentName := flag.String("name", "vira-node-restart", "name of the chaos experiment")
 
 	//Getting kubeConfig and Generate ClientSets
 	if err := clients.GenerateClientSetFromKubeConfig(); err != nil {
