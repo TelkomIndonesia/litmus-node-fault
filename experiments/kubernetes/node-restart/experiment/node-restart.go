@@ -44,13 +44,13 @@ func NodeRestart(clients clients.ClientSets) {
 		}
 	}
 
-	//Updating the chaos result in the beginning of experiment
-	log.Infof("[PreReq]: Updating the chaos result of %v experiment (SOT)", experimentsDetails.ExperimentName)
-	if err := result.ChaosResult(&chaosDetails, clients, &resultDetails, "SOT"); err != nil {
-		log.Errorf("Unable to Create the Chaos Result, err: %v", err)
-		result.RecordAfterFailure(&chaosDetails, &resultDetails, err, clients, &eventsDetails)
-		return
-	}
+	// //Updating the chaos result in the beginning of experiment
+	// log.Infof("[PreReq]: Updating the chaos result of %v experiment (SOT)", experimentsDetails.ExperimentName)
+	// if err := result.ChaosResult(&chaosDetails, clients, &resultDetails, "SOT"); err != nil {
+	// 	log.Errorf("Unable to Create the Chaos Result, err: %v", err)
+	// 	result.RecordAfterFailure(&chaosDetails, &resultDetails, err, clients, &eventsDetails)
+	// 	return
+	// }
 
 	// Set the chaos result uid
 	result.SetResultUID(&resultDetails, clients, &chaosDetails)

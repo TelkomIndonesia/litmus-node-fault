@@ -147,16 +147,15 @@ func restartNode(targetNodeList []string, experimentsDetails *experimentTypes.Ex
 		}
 		for _, appNode := range targetNodeList {
 			log.Infof("[Inject]: Restarting the %v node", appNode)
-			command := exec.Command("kubectl", "node_shell", appNode, "--", "shutdown", "-r", "+3")
+			command := exec.Command("kubectl", "node_shell", appNode, "--", "shutdown", "-r", "+1")
 			if err := common.RunCLICommands(command, "", fmt.Sprintf("{node: %s}", appNode), "failed to restart the target node", cerrors.ErrorTypeChaosInject); err != nil {
 				return err
 			}
 	
+			common.SetTargets(appNode, "injected", "node", chaosDetails)
+	
 		}
 
-		for _, appNode := range targetNodeList {
-			common.SetTargets(appNode, "injected", "node", chaosDetails)
-		}
 
 	}
 	return nil
